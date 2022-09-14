@@ -1,0 +1,24 @@
+<style>
+    a{
+        display: flex;
+        align-content: center;
+        justify-content: center;
+
+    }
+</style>
+<html>
+    <head>
+        <title>HEADS OR TILES</title>
+    </head>
+    <body style="background-color: black;">
+            {% if h_t==1 %}
+            <a href="{{url_for('index')}}">
+            <img src="{{url_for('static',filename='head.jpg')}}">
+            </a>
+            {% else %}
+            <a href="{{url_for('index')}}">
+            <img src="{{url_for('static',filename='tail.jpg')}}">
+            </a>
+            {% endif %}
+    </body>
+</html>
