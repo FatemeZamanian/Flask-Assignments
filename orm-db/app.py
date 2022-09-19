@@ -1,23 +1,20 @@
-import sqlite3
-from flask import Flask,render_template,request,g,redirect,url_for
+from flask import Flask,request,render_template
+from flask_sqlalchemy import SQLAlchemy 
+from sqlalchemy import Column ,Integer, String
 from form import Loginform,RegisterForm
+from sqlalchemy.exc import IntegrityError
 
 app=Flask(__name__)
-app.config['SECRET_KEY']='ssfsfsfs'
+db=SQLAlchemy(app)
+app.config['SECRET_KEY']='sfsfsf'
+app.config['SQLALCHEMY_DATABASE_URI']='mysql+pymysql://fateme:1378@localhost:3306/flaskdb'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
-def create_db():
-    return sqlite3.connect('./db.sqlite')
-
-
-@app.before_request
-def before_request_hook():
-    g.db=create_db()
-    g.cur=g.db.cursor()
-
-@app.after_request
-def after_request_hook(response):
-    g.db.close()
-    return response
+class User(db.Model):
+    __tablename__= 'users'
+    id=Column(Integer,primary_key=True)
+    username=Column(String(32),nullable=False,unique=True)
+    password=Column(String(128),nullable=False)
 
 
 @app.route('/')
@@ -41,11 +38,14 @@ def register():
         username=request.form.get('username')
         password=request.form.get('password')
         try:
-            g.cur.execute('INSERT INTO users (username,password) VALUES (?,?)',(username,password))
-            g.db.commit()
+            new_user=User()
+            new_user.username=username
+            new_user.password=password
+            db.session.add(new_user)
+            db.session.commit()
             return 'User added :)'
-        except sqlite3.IntegrityError:
-            g.db.rollback()
+        except IntegrityError:
+            db.session.rollback()
             return render_template('register.html',register_form=register_form,error='User is exist')
     else:
         return render_template('register.html',register_form=register_form,error='Confirm password error')
@@ -57,9 +57,8 @@ def login():
     if login_form.validate_on_submit():
         username=request.form.get('username')
         password=request.form.get('password')
-        g.cur.execute('SELECT * FROM users WHERE username = ? AND password = ?',(username,password))
-        user=g.cur.fetchone()
+        user=User.query.filter(User.username==username,User.password==password).first()
         if not user:
             return render_template('login.html',login_form=login_form,error='invalid username or password !!!!')
-        return render_template('doshboard.html',user=user[1])
+        return render_template('doshboard.html',user=user.username)
     return render_template('login.html',login_form=login_form,error='invalid username or password !!!!')
