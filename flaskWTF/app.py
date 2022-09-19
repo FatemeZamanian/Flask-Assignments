@@ -61,6 +61,6 @@ def login():
         g.cur.execute('SELECT * FROM users WHERE username = ? AND password = ?',(username,password))
         user=g.cur.fetchone()
         if not user:
-            return 'invalid username or password :('
-        return f'Wellcom dear {user[1]}'
-    return 'Error'
+            return render_template('login.html',login_form=login_form,error='invalid username or password !!!!')
+        return render_template('doshboard.html',user=user[1])
+    return render_template('login.html',login_form=login_form,error='invalid username or password !!!!')
